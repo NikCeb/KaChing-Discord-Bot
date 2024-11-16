@@ -2,26 +2,28 @@
 
 const commands = [
   {
-    name: "add-test",
-    description: "adds two numbers",
+    name: "add-debt",
+    description: "Creates Debt",
     options: [
       {
         name: "first-number",
         description: "first number data",
         type: 10,
-        // type: ApplicationCommandOptionType.Number,
         required: true,
       },
-
       {
         name: "second-number",
         description: "second number data",
         type: 10,
-        // type: ApplicationCommandOptionType.Number,
         required: true,
       },
     ],
   },
+  {
+    name: "add-mutiple-debt",
+    description: "Creates Debt to Group of people",
+  },
+
   {
     name: "send-reminder",
     description: "Sends Dept Reminder",
