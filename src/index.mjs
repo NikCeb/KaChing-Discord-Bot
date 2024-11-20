@@ -8,7 +8,7 @@ import {
 } from "discord.js";
 import dotenv from "dotenv";
 import guild_response from "./guild_reponses.js";
-import dm_response from "./dm_response.js";
+import dm_response from "./dm_responses.js";
 
 dotenv.config();
 const discord_bot_token = process.env.BOT_TOKEN;
@@ -22,7 +22,6 @@ const client = new Client({
     IntentsBitField.Flags.DirectMessages,
   ],
   partials: [ChannelType.DM],
-  // Need DM and ChannelType for Private Message To Bot
 });
 
 //  Listener using Ready to tell if bot is running.
@@ -36,7 +35,15 @@ client.on("messageCreate", async (message) => {
   if (message.channel.type === 1 || message.channel === "DMChannel") {
     // Send a reply in the DM
     try {
-      await message.channel.send(dm_response(message.content));
+      const response = dm_response(message);
+      if (!response) {
+        response = "I don't understand. Say that again.";
+      }
+      if (response.identifier === "Reply") {
+        await message.channel.send(response.content);
+      } else if (response.identifier === "Send") {
+        await message.author.send(response.content);
+      }
     } catch (error) {
       console.error("Failed to send a reply:", error);
     }
@@ -46,15 +53,7 @@ client.on("messageCreate", async (message) => {
 // Listens to slash commands only
 client.on("interactionCreate", async (interaction) => {
   try {
-    // Checks if commands is true
     if (!interaction.isChatInputCommand()) return;
-
-    // if (interaction.commandName === "add-test") {
-    //   guild_response("hey");
-    //   await interaction.channel.send(
-    //     `Completed, ww ${interaction.guildId} ${interaction.guild}`
-    //   );
-    // }
 
     if (interaction) {
       var response = guild_response(interaction);

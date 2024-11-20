@@ -1,7 +1,7 @@
 // TODO FIX COMMANDS AND CLEAN
-require("dotenv").config();
-const { REST, Routes, ApplicationCommandOptionType } = require("discord.js");
-const commands_list = require("./commands.js");
+import "dotenv/config";
+import { REST, Routes, ApplicationCommandOptionType } from "discord.js";
+import commands_list from "./commands/commands.js";
 
 const commands = commands_list;
 
