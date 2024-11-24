@@ -9,6 +9,8 @@ import {
 import dotenv from "dotenv";
 import guild_response from "./guild_reponses.js";
 import dm_response from "./dm_responses.js";
+import botCommands from "./register-commands.js";
+// import firebaseConfig from "./get_points.js";
 
 dotenv.config();
 const discord_bot_token = process.env.BOT_TOKEN;
@@ -26,6 +28,8 @@ const client = new Client({
 
 //  Listener using Ready to tell if bot is running.
 client.once("ready", (c) => {
+  botCommands();
+  // connect_firebase(firebaseConfig);
   console.log(`RUNNING ${c.user.tag} ${c.user.id} ${c.user.username} is HERE`);
 });
 
