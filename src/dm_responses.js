@@ -3,9 +3,9 @@ import { EmbedBuilder } from "discord.js";
 
 export default function dm_response(message) {
   if (message.content === "help!") {
-    return help();
+    help(message);
   } else if (message.content === "get-debt") {
-    return get_debt();
+    get_debt();
   } else {
     return "Thanks for messaging me directly! How can I assist you? \n Type ->'help!'<- for more information.";
   }
@@ -16,7 +16,7 @@ function sends_private_reminder(userID_sender) {
   // Client.users.get("User ID here").send("Message to Send")
 }
 
-async function help() {
+async function help(message) {
   const embed = new EmbedBuilder()
     .setTitle("Help")
     .setDescription("Basic Commands to use KaChing Bot")
@@ -24,9 +24,9 @@ async function help() {
       { name: "Make Charges", value: "/create-charge", inline: true },
       { name: "Send Reminder", value: "/send-reminder", inline: true }
     )
-    .setAuthor("KaChing Bot");
+    .setAuthor({ name: "KaChing Bot" });
   try {
-    await interaction.reply({ embeds: [embed] });
+    await message.author.send({ embeds: [embed] });
   } catch (error) {
     console.error("Failed to send a reply:", error);
   }

@@ -10,7 +10,6 @@ import dotenv from "dotenv";
 import guild_response from "./guild_reponses.js";
 import dm_response from "./dm_responses.js";
 import botCommands from "./register-commands.js";
-// import firebaseConfig from "./get_points.js";
 
 dotenv.config();
 const discord_bot_token = process.env.BOT_TOKEN;
@@ -29,7 +28,6 @@ const client = new Client({
 //  Listener using Ready to tell if bot is running.
 client.once("ready", (c) => {
   botCommands();
-  // connect_firebase(firebaseConfig);
   console.log(`RUNNING ${c.user.tag} ${c.user.id} ${c.user.username} is HERE`);
 });
 
@@ -39,15 +37,7 @@ client.on("messageCreate", async (message) => {
   if (message.channel.type === 1 || message.channel === "DMChannel") {
     // Send a reply in the DM
     try {
-      const response = dm_response(message);
-      if (!response) {
-        response = "I don't understand. Say that again.";
-      }
-      if (response.identifier === "Reply") {
-        await message.channel.send(response.content);
-      } else if (response.identifier === "Send") {
-        await message.author.send(response.content);
-      }
+      dm_response(message);
     } catch (error) {
       console.error("Failed to send a reply:", error);
     }
@@ -60,18 +50,8 @@ client.on("interactionCreate", async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     if (interaction) {
-      var response = guild_response(interaction);
-      if (!response) {
-        response = "I don't understand. Say that again.";
-      }
       try {
-        await interaction.reply(response.content);
-        console.log(response.content);
-        if (response.identifier === "Reply") {
-          await interaction.reply(response.content);
-        } else if (response.identifier === "Send") {
-          await interaction.channel.send(response.content);
-        }
+        guild_response(interaction);
       } catch (error) {
         console.error("Failed to send a reply:", error);
       }
