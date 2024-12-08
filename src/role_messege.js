@@ -18,40 +18,10 @@ const client = new Client({
   partials: [ChannelType.DM],
 });
 
+const roles = [{ id: "123456789", name: "role1" }];
+
 //  Listener using Ready to tell if bot is running.
 client.once("ready", (c) => {
   botCommands();
   console.log(`RUNNING ${c.user.tag} ${c.user.id} ${c.user.username} is HERE`);
 });
-
-client.on("messageCreate", async (message) => {
-  if (message.author.bot) return;
-
-  if (message.channel.type === ChannelType.DM) {
-    // Send a reply in the DM
-    try {
-      await dm_response(message);
-    } catch (error) {
-      console.error("Failed to send a reply:", error);
-    }
-  }
-});
-
-// Listens to slash commands only
-client.on("interactionCreate", async (interaction) => {
-  try {
-    if (!interaction.isChatInputCommand()) return;
-
-    if (interaction) {
-      try {
-        await guild_response(interaction);
-      } catch (error) {
-        console.error("Failed to send a reply:", error);
-      }
-    }
-  } catch (error) {
-    console.error("An error occurred during interaction:", error);
-  }
-});
-
-client.login(discord_bot_token);

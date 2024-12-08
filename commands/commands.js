@@ -25,27 +25,8 @@ const commands_list = [
         ],
       },
       {
-        name: "update-charge",
-        description: "Update debt of a user",
-        type: 1,
-        options: [
-          {
-            name: "user-name",
-            description: "User to Charge",
-            type: 6,
-            required: true,
-          },
-          {
-            name: "amount",
-            description: "Amount to Charge",
-            type: 10,
-            required: true,
-          },
-        ],
-      },
-      {
-        name: "complete-charge",
-        description: "Complete debt of a user",
+        name: "pay-charge",
+        description: "Pay debt of a user",
         type: 1,
         options: [
           {

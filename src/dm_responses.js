@@ -1,13 +1,19 @@
 // TODO ADD the responses here
 import { EmbedBuilder } from "discord.js";
 
-export default function dm_response(message) {
-  if (message.content === "help!") {
-    help(message);
-  } else if (message.content === "get-debt") {
-    get_debt();
+export default async function dm_response(message) {
+  if (message.content.toLowerCase() === "help!") {
+    await help(message);
+  } else if (message.content.toLowerCase() === "get-debt") {
+    await get_debt(message.author.id);
   } else {
-    return "Thanks for messaging me directly! How can I assist you? \n Type ->'help!'<- for more information.";
+    try {
+      await message.author.send(
+        "Thanks for messaging me directly! How can I assist you? \nType 'help!' for more information."
+      );
+    } catch (error) {
+      console.error("Failed to send a reply:", error);
+    }
   }
 }
 
@@ -22,7 +28,8 @@ async function help(message) {
     .setDescription("Basic Commands to use KaChing Bot")
     .addFields(
       { name: "Make Charges", value: "/create-charge", inline: true },
-      { name: "Send Reminder", value: "/send-reminder", inline: true }
+      { name: "Send Reminder", value: "/send-reminder", inline: true },
+      { name: "Pay Charges", value: "/pay-charge", inline: true }
     )
     .setAuthor({ name: "KaChing Bot" });
   try {
