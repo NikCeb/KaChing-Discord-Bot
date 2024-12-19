@@ -1,11 +1,12 @@
 // TODO ADD the responses here
 import { EmbedBuilder } from "discord.js";
+import { manageRecords } from "../response_db/db_response.js";
 
 export default async function dm_response(message) {
   if (message.content.toLowerCase() === "help!") {
     await help(message);
   } else if (message.content.toLowerCase() === "get-debt") {
-    await get_debt(message.author.id);
+    await get_debt(message);
   } else {
     try {
       await message.author.send(
@@ -15,11 +16,6 @@ export default async function dm_response(message) {
       console.error("Failed to send a reply:", error);
     }
   }
-}
-
-function sends_private_reminder(userID_sender) {
-  // TODO: Implement sends_private_reminder function
-  // Client.users.get("User ID here").send("Message to Send")
 }
 
 async function help(message) {
@@ -39,7 +35,21 @@ async function help(message) {
   }
 }
 
-function get_debt(userID_sender, purpose) {
-  // TODO: Implement get_debt function
-  // Connect to database and get the debt of the user
+async function get_debt(message) {
+  const debts = await manageRecords("read", message.author.id);
+  debts.forEach((debt) => {
+    console.log(debt.col);
+  });
+  const embed = new EmbedBuilder()
+    .setTitle("Your Balance")
+    .setDescription("Basic Commands to use KaChing Bot")
+    .setAuthor({ name: "KaChing Bot" });
+  debts.forEach((debt) => {
+    embed.addFields({ name: "Debt", value: debt.col });
+  });
+  try {
+    await message.author.send({ embeds: [embed] });
+  } catch (error) {
+    console.error("Failed to send a reply:", error);
+  }
 }

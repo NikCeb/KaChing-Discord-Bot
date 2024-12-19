@@ -1,7 +1,7 @@
 import { Client, IntentsBitField, ChannelType } from "discord.js";
 import dotenv from "dotenv";
-import guild_response from "./guild_reponses.js";
-import dm_response from "./dm_responses.js";
+import guild_response from "./response/guild_reponses.js";
+import dm_response from "./response/dm_responses.js";
 import botCommands from "./register-commands.js";
 
 dotenv.config();

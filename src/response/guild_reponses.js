@@ -1,6 +1,6 @@
 // TODO ADD the responses here
 import { EmbedBuilder } from "discord.js";
-import { add_user, get_user, update_user, delete_user } from "./fs_database.js";
+import { manageRecords } from "./response_db/db_database.js";
 
 export default async function guild_response(interaction) {
   const command = interaction.commandName;
@@ -28,24 +28,27 @@ async function sends_private_reminder(interaction) {
   const username_receiver =
     interaction.options._hoistedOptions[0].user.username;
 
-  // TODO : Create a function to get user debt from db.
-
   const embed = new EmbedBuilder()
     .setTitle("Reminder! Reminder! Reminder!")
-    .setDescription("This is a reminder for you to pay your dues")
+    .setDescription("This is a reminder for you to pay your dues.")
     .setColor("#00FF00")
     .addFields(
       {
-        name: `@${username_sender}`,
-        value: `@${send_id}`,
+        name: "Sender",
+        value: `@${username_sender} (${send_id})`,
         inline: true,
       },
       {
-        name: `@${username_receiver}`,
-        value: `@${receiver_id}`,
+        name: "Receiver",
+        value: `@${username_receiver} (${receiver_id})`,
         inline: true,
       }
-    );
+    )
+    .setTimestamp({ getUTCDate: true })
+    .setFooter({
+      text: "KaChing Discord Bot",
+      iconURL: interaction.client.user.displayAvatarURL(),
+    });
 
   await interaction.reply({ embeds: [embed] });
 }
