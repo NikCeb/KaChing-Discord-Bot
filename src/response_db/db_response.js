@@ -2,7 +2,6 @@ import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 import fs from "fs";
 import path from "path";
-import { CommandInteraction } from "discord.js";
 const dbFilePath = path.resolve("./temp/database.db");
 sqlite3.verbose();
 
@@ -21,9 +20,13 @@ async function initializeDatabase() {
   });
 
   await db.exec(`
-    CREATE TABLE IF NOT EXISTS tbl (
+    CREATE TABLE IF NOT EXISTS LoanData (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      col TEXT NOT NULL
+      amount INTEGER NOT NULL,
+      lenderID TEXT NOT NULL,
+      lenderName TEXT NOT NULL,
+      borrowerID TEXT NOT NULL,
+      borrowerName TEXT NOT NULL
     );
   `);
 
@@ -32,33 +35,51 @@ async function initializeDatabase() {
 
 initializeDatabase();
 
-async function createRecord(db, value) {
-  await db.run(`INSERT INTO tbl (col) VALUES ("${value}")`);
+async function createRecord(db, userDetails) {
+  await db.run(`INSERT INTO LoanData (amount,lenderID,lenderName,borrowerID,borrowerName) VALUES
+     ("${
+       (value,
+       userDetails.lenderID,
+       userDetails.lenderName,
+       userDetails.borrowerID,
+       userDetails.borrowerName)
+     }")`);
 }
 
-async function readRecords(db) {
-  return await db.all("SELECT col FROM tbl");
+async function readRecords(db, userDetails) {
+  const records = await db.all(
+    `SELECT amount, lenderID, lenderName, borrowerID, borrowerName FROM LoanData 
+    WHERE borrowerID = '${userDetails.borrowerID}' AND lenderID = '${userDetails.lenderID}'`
+  );
+  return records;
 }
 
-async function deleteRecord(db, value) {
-  await db.exec(`DELETE FROM tbl WHERE col = "${value}"`);
+async function deleteRecord(db, userDetails) {
+  await db.exec(`DELETE FROM LoanData WHERE lenderID = "${userDetails.lenderID}"
+     AND borrowerID = "${userDetails.borrowerID}" AND amount = "${userDetails.amount}"`);
 }
 
-export async function manageRecords(purpose, value = null, userID = null) {
+export async function manageRecords(purpose, userDetails) {
   const db = await open({
     filename: "./temp/database.db",
     driver: sqlite3.Database,
   });
 
   if (purpose === "read") {
-    const records = await readRecords(db);
-    console.log(records);
+    const records = await readRecords(db, userDetails);
     await db.close();
-    return records;
+    if (records.length === 0) {
+      return "No records found";
+    } else {
+      return records;
+    }
+  } else if (purpose === "create") {
+    await createRecord(db, userDetails);
+    await db.close();
+    return "Record created successfully";
+  } else if (purpose === "delete") {
+    await deleteRecord(db, userDetails);
+    await db.close();
+    return "Record deleted successfully";
   }
-
-  //   await createRecord(db, "exampleValue");
-
-  //   await updateRecord(db, "exampleValue", "newValue");
-  //   await deleteRecord(db, "newValue");
 }

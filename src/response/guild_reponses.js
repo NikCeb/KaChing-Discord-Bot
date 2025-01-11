@@ -1,6 +1,6 @@
 // TODO ADD the responses here
 import { EmbedBuilder } from "discord.js";
-import { manageRecords } from "./response_db/db_database.js";
+import { manageRecords } from "../response_db/db_response.js";
 
 export default async function guild_response(interaction) {
   const command = interaction.commandName;
@@ -13,8 +13,6 @@ export default async function guild_response(interaction) {
     }
   } else if (command === "send-reminder") {
     // console.log(interaction.options._hoistedOptions[0], "[[[");
-    console.log(interaction.user, "]]]]");
-
     sends_private_reminder(interaction);
   } else {
     return "I don't understand. How can I assist you?";
@@ -23,10 +21,20 @@ export default async function guild_response(interaction) {
 
 async function sends_private_reminder(interaction) {
   const send_id = interaction.user.id;
-  const receiver_id = interaction.options._hoistedOptions[0].value;
   const username_sender = interaction.user.username;
+  const receiver_id = interaction.options._hoistedOptions[0].value;
   const username_receiver =
     interaction.options._hoistedOptions[0].user.username;
+
+  const userDetails = [
+    "",
+    send_id,
+    username_sender,
+    receiver_id,
+    username_receiver,
+  ];
+
+  var data = await manageRecords("read", userDetails);
 
   const embed = new EmbedBuilder()
     .setTitle("Reminder! Reminder! Reminder!")
@@ -44,7 +52,6 @@ async function sends_private_reminder(interaction) {
         inline: true,
       }
     )
-    .setTimestamp({ getUTCDate: true })
     .setFooter({
       text: "KaChing Discord Bot",
       iconURL: interaction.client.user.displayAvatarURL(),
