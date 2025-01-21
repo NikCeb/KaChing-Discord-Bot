@@ -12,50 +12,73 @@ export default async function guild_response(interaction) {
       await interaction.reply("No subcommand found");
     }
   } else if (command === "send-reminder") {
-    // console.log(interaction.options._hoistedOptions[0], "[[[");
     sends_private_reminder(interaction);
   } else {
-    return "I don't understand. How can I assist you?";
+    await help();
   }
 }
 
 async function sends_private_reminder(interaction) {
-  const send_id = interaction.user.id;
-  const username_sender = interaction.user.username;
-  const receiver_id = interaction.options._hoistedOptions[0].value;
-  const username_receiver =
+  const userID_lender = interaction.user.id;
+  const userName_lender = interaction.user.username;
+  const userID_borrower = interaction.options._hoistedOptions[0].value;
+  const userName_borrower =
     interaction.options._hoistedOptions[0].user.username;
 
-  const userDetails = [
-    "",
-    send_id,
-    username_sender,
-    receiver_id,
-    username_receiver,
-  ];
+  const userDetails = {
+    amount: "",
+    lenderID: userID_lender,
+    lenderName: userName_lender,
+    borrowerID: userID_borrower,
+    borrowerUsername: userName_borrower,
+  };
+  console.log(userDetails);
+  const loanData = await manageRecords("read", userDetails);
 
-  var data = await manageRecords("read", userDetails);
-
-  const embed = new EmbedBuilder()
+  const debts = new EmbedBuilder()
+    .setAuthor({
+      name: "KaChing Bot",
+      iconURL: `KaChing-Discord-Bot/images/KaChingBot.jpg`,
+    })
     .setTitle("Reminder! Reminder! Reminder!")
     .setDescription("This is a reminder for you to pay your dues.")
     .setColor("#00FF00")
-    .addFields(
-      {
-        name: "Sender",
-        value: `@${username_sender} (${send_id})`,
-        inline: true,
-      },
-      {
-        name: "Receiver",
-        value: `@${username_receiver} (${receiver_id})`,
-        inline: true,
-      }
-    )
+    .setTimestamp()
     .setFooter({
       text: "KaChing Discord Bot",
-      iconURL: interaction.client.user.displayAvatarURL(),
+      iconURL: `KaChing-Discord-Bot/images/burn_the_money_danny_devito.gif`,
     });
+  if (Array.isArray(loanData)) {
+    for (const loan of loanData) {
+      debts.addFields(
+        { name: "Amount", value: loan.amount.toString() },
+        { name: "Lender ID", value: loan.lenderID },
+        { name: "Lender Name", value: loan.lenderName },
+        { name: "Borrower ID", value: loan.borrowerID },
+        { name: "Borrower Name", value: loan.borrowerName },
+        { name: "\u200B", value: "\u200B", inline: true }
+      );
+    }
+  } else {
+    debts.addFields({ name: "Loan Debt", value: "No Pending Balance" });
+  }
 
-  await interaction.reply({ embeds: [embed] });
+  await interaction.reply({ embeds: [debts] }, { ephemeral: true });
+}
+
+async function help() {
+  const help = new EmbedBuilder()
+    .setTitle("Help")
+    .setDescription("Basic Commands to use KaChing Bot")
+    .addFields(
+      { name: "Make Charges", value: "/create-charge", inline: true },
+      { name: "Send Reminder", value: "/send-reminder", inline: true },
+      { name: "Pay Charges", value: "/pay-charge", inline: true }
+    )
+    .setAuthor({ name: "KaChing Bot" });
+  try {
+    await interaction.reply({ embeds: [help] });
+  } catch (error) {
+    console.error("Failed to send a reply:", error);
+  }
 }
