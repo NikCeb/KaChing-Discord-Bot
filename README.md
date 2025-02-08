@@ -1,40 +1,82 @@
-![Logo](https://dev-to-uploads.s3.amazonaws.com/uploads/articles/th5xamgrr6se0x5ro4g6.png)
+![Logo](/KaChing-Discord-Bot/images/KaChingBot.jpg)
 
 # KaChing Discord Bot
 
-A loan and payment bot tracker for ## Features
+A loan and payment bot tracker for any Discord server size.
 
-- Tracing for loans and payment of discord members
+## Features
+
+- Tracking loans and payments of Discord members
 - Creating charges
 - Making payments
-- Showing Logs
-- Shows personal outstanding balance on users
+- Showing logs
+- Displaying personal outstanding balances for users
+- Uses **SQLite** as a lightweight database for efficient storage and retrieval
 
 ## Install and Run Locally
 
-Clone the project
+Clone the project:
 
 ```bash
-  git clone git@github.com:NikCeb/KaChing-Discord-Bot.git
+git clone git@github.com:NikCeb/KaChing-Discord-Bot.git
 ```
 
-Go to the project directory
+Go to the project directory:
 
 ```bash
-  cd KaChing-Discord-Bot/src
+cd KaChing-Discord-Bot/src
 ```
 
-Install dependencies
+Install dependencies:
 
 ```bash
-  npm install
+npm install
 ```
 
-Start the discord bot we will be using nodemon for this
+Start the Discord bot using `nodemon`:
 
 ```bash
-  ~KaChing-Discord-Bot$ nodemon
+nodemon
 ```
+
+## Database
+
+KaChing Discord Bot uses **SQLite**, a lightweight and efficient database, to store loan and payment records.
+
+- The database file is located in the `/temp` folder.
+- SQLite is ideal for small to medium-scale applications where simplicity and performance are key.
+
+## Commands
+
+- [Create Charge](#create-charge)
+- [Pay Charge](#pay-charge)
+- [Send Reminder](#send-reminder)
+
+### Create Charge
+
+Used by the lender to create a loan charge.
+
+#### **Required Fields:**
+
+- `borrower-username`
+- `amount`
+
+### Pay Charge
+
+Used by the borrower to pay the borrowed amount.
+
+#### **Required Fields:**
+
+- `lender-username`
+- `amount`
+
+### Send Reminder
+
+Used by the lender to send a reminder for outstanding balances.
+
+#### **Required Fields:**
+
+- `borrower-username`
 
 ## Authors
 
