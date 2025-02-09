@@ -3,22 +3,23 @@
 const commands_list = [
   {
     name: "charge",
-    description: "Create / Update / Complete user debt",
+    description:
+      "Manage user debts by creating, updating, or completing charges",
     options: [
       {
         name: "create-charge",
-        description: "Create charge of a user",
+        description: "Create a loan charge for a user",
         type: 1,
         options: [
           {
             name: "user-name",
-            description: "User to Charge",
+            description: "The user to charge",
             type: 6,
             required: true,
           },
           {
             name: "amount",
-            description: "Amount to Charge",
+            description: "The amount to charge",
             type: 10,
             required: true,
           },
@@ -26,18 +27,18 @@ const commands_list = [
       },
       {
         name: "pay-charge",
-        description: "Pay debt of a user",
+        description: "Record a payment for a user's borrowed amount",
         type: 1,
         options: [
           {
             name: "user-name",
-            description: "User to Charge",
+            description: "The user making the payment",
             type: 6,
             required: true,
           },
           {
             name: "amount",
-            description: "Amount to Charge",
+            description: "The amount being paid",
             type: 10,
             required: true,
           },
@@ -45,14 +46,13 @@ const commands_list = [
       },
     ],
   },
-
   {
     name: "send-reminder",
-    description: "Sends Outstangind Balance Reminder",
+    description: "Send a reminder for outstanding balances",
     options: [
       {
         name: "user-name",
-        description: "UserName of person to be reminded!",
+        description: "The user to remind",
         type: 6,
         required: true,
       },
@@ -60,15 +60,15 @@ const commands_list = [
   },
   {
     name: "balance",
-    description: "Get your current balance",
+    description: "Retrieve your current balance",
   },
   {
     name: "leaderboard",
-    description: "Get the leaderboard of all users",
+    description: "View the leaderboard of all users",
   },
   {
     name: "help",
-    description: "Get help on how to use the bot",
+    description: "Get instructions on how to use the bot",
   },
 ];
 
