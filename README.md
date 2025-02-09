@@ -1,4 +1,4 @@
-![Logo](/KaChing-Discord-Bot/images/KaChingBot.jpg)
+![Logo](./images/KaChingBot.jpg)
 
 # KaChing Discord Bot
 
