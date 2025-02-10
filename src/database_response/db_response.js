@@ -97,6 +97,7 @@ async function readRecords(db, userDetails) {
       LD.borrowerID = UD.borrowerID
     WHERE 
       LD.borrowerID = ?
+    ORDER BY LD.id DESC
   `;
   const params = [userDetails.borrowerID];
 
