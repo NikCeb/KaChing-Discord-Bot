@@ -1,4 +1,5 @@
-//  TODO ADD HELP COMMAND
+//  When adding a new command, add a new object to the commands_list array
+//  The if adding options to a command, user-name is always the first option
 
 const commands_list = [
   {
@@ -40,6 +41,12 @@ const commands_list = [
             name: "amount",
             description: "The amount being paid",
             type: 10,
+            required: true,
+          },
+          {
+            name: "date",
+            description: "The date of the payment",
+            type: 4, // Type 4 is for datetime
             required: true,
           },
         ],
