@@ -46,7 +46,7 @@ const commands_list = [
           {
             name: "date",
             description: "The date of the payment",
-            type: 4, // Type 4 is for datetime
+            type: 3,
             required: true,
           },
         ],
