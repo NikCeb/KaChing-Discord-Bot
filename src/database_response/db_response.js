@@ -18,7 +18,7 @@ if (!fs.existsSync(dbFilePath)) {
     throw error;
   });
 }
-
+// Database initialization
 async function initializeDatabase() {
   const db = await open({
     filename: dbFilePath,
@@ -28,6 +28,7 @@ async function initializeDatabase() {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS LoanData (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date DATE DEFAULT (date('now')),
       amount FLOAT NOT NULL,
       lenderID TEXT NOT NULL,
       lenderName TEXT NOT NULL,
@@ -46,14 +47,14 @@ async function initializeDatabase() {
 
   await db.close();
 }
-
+// Create a new record in the database check if user exists in UserData table
 async function createRecord(db, userDetails) {
   const { amount, lenderID, lenderName, borrowerID, borrowerName } =
     userDetails;
 
   try {
     await db.run(
-      `INSERT INTO LoanData (amount, lenderID, lenderName, borrowerID, borrowerName) VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO LoanData (date, amount, lenderID, lenderName, borrowerID, borrowerName) VALUES (date('now'), ?, ?, ?, ?, ?)`,
       [amount, lenderID, lenderName, borrowerID, borrowerName]
     );
 
@@ -79,10 +80,12 @@ async function createRecord(db, userDetails) {
   }
 }
 
+// Read records from the database based on the user details
 async function readRecords(db, userDetails) {
-  const baseQuery = `
+  let baseQuery = `
     SELECT 
       LD.id, 
+      LD.date,
       LD.amount, 
       LD.lenderID, 
       LD.lenderName, 
@@ -97,14 +100,15 @@ async function readRecords(db, userDetails) {
       LD.borrowerID = UD.borrowerID
     WHERE 
       LD.borrowerID = ?
-    ORDER BY LD.id DESC
+    
   `;
   const params = [userDetails.borrowerID];
-
   if (userDetails.lenderID) {
     baseQuery += ` AND LD.lenderID = ?`;
     params.push(userDetails.lenderID);
   }
+
+  baseQuery += `ORDER BY LD.id DESC`;
 
   try {
     const records = await db.all(baseQuery, params);
@@ -115,17 +119,29 @@ async function readRecords(db, userDetails) {
   }
 }
 
+// Delete a record from the database and update the user balance
 async function deleteRecord(db, userDetails) {
-  const { lenderID, borrowerID, amount, borrowerName } = userDetails;
-
+  const { date, lenderID, borrowerID, amount, borrowerName } = userDetails;
+  // When Paying Lender Becomes Borrower because lender is the user who is ussuing the command
   try {
-    await db.run(
-      `DELETE FROM LoanData WHERE lenderID = ? AND borrowerID = ? AND amount = ?`,
-      [lenderID, borrowerID, amount]
-    );
+    const deleteQuery = date
+      ? `DELETE FROM LoanData WHERE lenderID = ? AND borrowerID = ? AND amount = ? AND date = ?`
+      : `DELETE FROM LoanData WHERE lenderID = ? AND borrowerID = ? AND amount = ?`;
+
+    const deleteParams = date
+      ? [
+          lenderID,
+          borrowerID,
+          amount,
+          new Date(date).toISOString().split("T")[0],
+        ]
+      : [lenderID, borrowerID, amount];
+
+    await db.run(deleteQuery, deleteParams);
+
     await db.run(
       `UPDATE UserData SET amount = amount - ? WHERE borrowerID = ? AND borrowerName = ?`,
-      [amount, borrowerID, borrowerName]
+      [amount, lenderID, borrowerName]
     );
   } catch (error) {
     console.error("Error deleting record:", error);
@@ -133,6 +149,7 @@ async function deleteRecord(db, userDetails) {
   }
 }
 
+// Handle all database operations
 export async function manageRecords(purpose, userDetails) {
   const db = await open({
     filename: dbFilePath,
