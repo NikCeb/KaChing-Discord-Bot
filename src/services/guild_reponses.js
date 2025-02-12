@@ -4,20 +4,27 @@ import { manageRecords } from "../database_response/db_response.js";
 
 export default async function guild_response(interaction) {
   const reponse = new ResponseService(interaction);
-  const command = interaction.commandName;
   try {
-    switch (command) {
-      case "create-charge":
-        await reponse.create_charge(interaction);
-        break;
-      case "pay-charges":
-        await reponse.payCharge(interaction);
+    switch (interaction.commandName) {
+      case "charge":
+        switch (
+          interaction.options._subcommand // subcommand / options under charge command
+        ) {
+          case "create-charge":
+            await reponse.createCharge(interaction);
+            break;
+          case "pay-charge":
+            await reponse.payCharge(interaction);
+            break;
+          default:
+            await interaction.reply("Invalid command");
+            break;
+        }
         break;
       case "get-balances":
         await reponse.getLoanData(interaction);
         break;
       case "send-reminder":
-        console.log("Reminder sent");
         await reponse.sendReminder(interaction);
         break;
       case "help":
@@ -34,12 +41,25 @@ export default async function guild_response(interaction) {
 
 class ResponseService {
   constructor(interaction) {
+    const options = interaction.options._hoistedOptions;
     this.interaction = interaction;
-    this.userID_lender = interaction.user.id;
-    this.userName_lender = interaction.user.username;
-    this.userID_borrower = interaction.options._hoistedOptions[0].value;
-    this.userName_borrower =
-      interaction.options._hoistedOptions[0].user.username;
+    this.amount =
+      options.find((option) => option.name === "amount")?.value || 0;
+    this.date = Date(options[2]?.date?.value || Date.now());
+    this.userID_lender = interaction.user.id; // Lender ID is the user who is issuing the command
+    this.userName_lender = interaction.user.username; // Lender Name is the user who is issuing the command
+    this.userID_borrower = options[0]?.value || null; // Borrower ID is the first option
+    this.userName_borrower = options[0]?.user?.username || "Unknown"; // Borrower ID is the first option
+
+    this.interactionData = {
+      date: this.date,
+      amount: this.amount,
+      lenderID: this.userID_lender, // Lender ID is the user who is issuing the command
+      lenderName: this.userName_lender, // Lender Name is the user who is issuing the command
+      borrowerID: this.userID_borrower, // Borrower ID is the target user
+      borrowerName: this.userName_borrower, // Borrower Name is the target user
+    };
+
     this.embed = new EmbedBuilder()
       .setAuthor({
         name: "KaChing Bot",
@@ -54,44 +74,57 @@ class ResponseService {
           "https://raw.githubusercontent.com/NikCeb/KaChing-Discord-Bot/refs/heads/main/images/KaChingBot.jpg",
       });
   }
-  // Send Reminder to the borrower
-  //  TODO IF user send reminder is self then show use ephineral flags
-  async sendReminder() {
-    const loanData = await manageRecords("read", this.userID_borrower);
-    this.embed
-      .setTitle(`Reminder! Reminder! Reminder!`)
-      .setDescription(
-        `This is a reminder for you to pay your recent dues ${userMention(
-          this.userID_borrower
-        )}.`
-      )
-      .setImage(
-        "https://raw.githubusercontent.com/NikCeb/KaChing-Discord-Bot/refs/heads/main/images/burn_the_money_danny_devito.gif"
-      );
 
-    if (Array.isArray(loanData) && loanData.length > 0) {
-      loanData.slice(0, 4).forEach((loan) => {
-        this.debts.addFields(
-          { name: "Amount", value: loan.amount.toString(), inline: true },
-          { name: "Lender ID", value: loan.lenderID, inline: true },
-          { name: "Lender Name", value: loan.lenderName, inline: true },
-          { name: "Borrower ID", value: loan.borrowerID, inline: true },
-          { name: "Borrower Name", value: loan.borrowerName, inline: true }
-        );
-      });
-      this.embed.setColor("#FF0000");
+  // Send Reminder to the borrower
+  async sendReminder() {
+    if (this.interaction.user.id === this.userID_borrower) {
+      return await this.interaction.reply(
+        "You cannot send a reminder to yourself",
+        {
+          flags: MessageFlags.Ephemeral,
+        }
+      );
     } else {
-      this.embed.setColor("#00FF00");
-      this.embed.addFields({ name: "Loan Debt", value: "No Pending Balance" });
+      const loanData = await manageRecords("read", this.interactionData);
+      console.log(loanData);
+      this.embed
+        .setTitle(`Reminder! Reminder! Reminder!`)
+        .setDescription(
+          `This is a reminder for you to pay your recent dues ${userMention(
+            this.userID_borrower
+          )}. Your Balance is as follows: $  ${loanData[0].balance.toString()}`
+        )
+        .setImage(
+          "https://raw.githubusercontent.com/NikCeb/KaChing-Discord-Bot/refs/heads/main/images/burn_the_money_danny_devito.gif"
+        );
+
+      if (Array.isArray(loanData) && loanData.length > 0) {
+        loanData.slice(0, 4).forEach((loan) => {
+          this.embed.addFields({
+            name: `Loan on ${new Date(loan.date).toDateString()}`,
+            value: `Php ${loan.amount.toString()} owed to -> ${
+              loan.lenderName
+            }`,
+            inline: true,
+          });
+        });
+        this.embed.setColor("#FF0000");
+      } else {
+        this.embed.setColor("#00FF00");
+        this.embed.addFields({
+          name: "Loan Debt",
+          value: "No Pending Balance",
+        });
+      }
+      await this.interaction.reply({
+        embeds: [this.embed],
+        flags: MessageFlags.None,
+      });
     }
-    await this.interaction.reply({
-      embeds: [this.embed],
-      flags: MessageFlags.None,
-    });
   }
   // Get user balance
   async getLoanData() {
-    const loadData = await manageRecords("read", this.userID_borrower);
+    const loadData = await manageRecords("read", this.interactionData);
     this.embed
       .setTitle(`Your Outstanding Balance is as follows: ${loadData.balance}`)
       .setDescription(
@@ -104,13 +137,11 @@ class ResponseService {
       );
     if (Array.isArray(loanData) && loanData.length > 0) {
       loanData.slice(0, 4).forEach((loan) => {
-        this.debts.addFields(
-          { name: "Amount", value: loan.amount.toString(), inline: true },
-          { name: "Lender ID", value: loan.lenderID, inline: true },
-          { name: "Lender Name", value: loan.lenderName, inline: true },
-          { name: "Borrower ID", value: loan.borrowerID, inline: true },
-          { name: "Borrower Name", value: loan.borrowerName, inline: true }
-        );
+        this.embed.addFields({
+          name: `Loan on ${new Date(loan.date).toDateString() || ""}`,
+          value: `Php ${loan.amount.toString()} owed to -> ${loan.lenderName}`,
+          inline: true,
+        });
       });
       this.embed.setColor("#FF0000");
     } else {
@@ -125,12 +156,25 @@ class ResponseService {
     return "No records found";
   }
 
+  // Create a charge for the borrower
   async createCharge() {
-    return await manageRecords("create", this.userID_borrower);
+    await manageRecords("create", this.interactionData);
+    return await this.interaction.reply("Charge Created", {
+      flags: MessageFlags.Ephemeral,
+    });
   }
 
+  // Pay the charge
   async payCharge() {
-    return await manageRecords("delete", this.userID_borrower);
+    if (this.interaction.user.id === this.userID_borrower) {
+      return await this.interaction.reply("You cannot pay yourself", {
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+    await manageRecords("delete", this.interactionData);
+    return await this.interaction.reply("Charge Paid", {
+      flags: MessageFlags.Ephemeral,
+    });
   }
 }
 
@@ -139,9 +183,9 @@ async function help(interaction) {
     .setTitle("Help")
     .setDescription("Basic Commands to use KaChing Bot")
     .addFields(
-      { name: "Make Charges", value: "/create-charge", inline: true },
-      { name: "Send Reminder", value: "/send-reminder", inline: true },
-      { name: "Pay Charges", value: "/pay-charge", inline: true }
+      { name: "Make Charges", value: "/charge create-charge", inline: true },
+      { name: "Pay Charges", value: "/charge pay-charge", inline: true },
+      { name: "Send Reminder", value: "/send-reminder", inline: true }
     )
     .setAuthor({ name: "KaChing Bot" });
   try {
