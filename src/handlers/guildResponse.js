@@ -137,11 +137,16 @@ class ResponseService {
       );
     if (Array.isArray(loanData) && loanData.length > 0) {
       loanData.slice(0, 4).forEach((loan) => {
-        this.embed.addFields({
-          name: `Loan on ${new Date(loan.date).toDateString() || ""}`,
-          value: `Php ${loan.amount.toString()} owed to -> ${loan.lenderName}`,
-          inline: true,
-        });
+        this.embed.addFields(
+          {
+            name: `Loan on ${new Date(loan.date).toDateString() || ""}`,
+            value: `Php ${loan.amount.toString()} owed to -> ${
+              loan.lenderName
+            }`,
+            inline: true,
+          },
+          { name: "\u200B", value: "\u200B", inline: true }
+        );
       });
       this.embed.setColor("#FF0000");
     } else {
