@@ -1,7 +1,7 @@
 //  When adding a new command, add a new object to the commands_list array
 //  The if adding options to a command, user-name is always the first option
 
-const commands_list = [
+const guildCommands = [
   {
     name: "charge",
     description:
@@ -79,4 +79,4 @@ const commands_list = [
   },
 ];
 
-export default commands_list;
+export default guildCommands;
