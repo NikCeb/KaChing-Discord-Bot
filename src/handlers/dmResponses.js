@@ -1,5 +1,5 @@
 import { EmbedBuilder } from "discord.js";
-import { manageRecords } from "../database_response/db_response.js";
+import { manageRecords } from "../database/db_response.js";
 
 export default async function dm_response(message) {
   const content = message.content.toLowerCase();

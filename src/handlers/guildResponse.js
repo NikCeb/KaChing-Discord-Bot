@@ -1,6 +1,6 @@
 // TODO ADD the responses here
 import { EmbedBuilder, userMention, MessageFlags } from "discord.js";
-import { manageRecords } from "../database_response/db_response.js";
+import { manageRecords } from "../database/db_response.js";
 
 export default async function guild_response(interaction) {
   const reponse = new ResponseService(interaction);
