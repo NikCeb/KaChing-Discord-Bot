@@ -7,7 +7,6 @@ function loadEvents(client) {
   );
 
   for (const file of eventFiles) {
-    console.log(`🔔 Loading event: ${file}`);
     import(`../events/${file}`)
       .then((event) => {
         if (!event.default || !event.default.name) {
@@ -29,6 +28,7 @@ function loadEvents(client) {
         console.error(`❌ Error loading event ${file}:`, error)
       );
   }
+  console.log(`🔔 Events Loaded`);
 }
 
 export default loadEvents;

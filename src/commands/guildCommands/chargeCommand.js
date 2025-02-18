@@ -1,8 +1,5 @@
-//  When adding a new command, add a new object to the commands_list array
-//  The if adding options to a command, user-name is always the first option
-
-const guildCommands = [
-  {
+export default {
+  commandData: {
     name: "charge",
     description:
       "Manage user debts by creating, updating, or completing charges",
@@ -53,30 +50,4 @@ const guildCommands = [
       },
     ],
   },
-  {
-    name: "send-reminder",
-    description: "Send a reminder for outstanding balances",
-    options: [
-      {
-        name: "user-name",
-        description: "The user to remind",
-        type: 6,
-        required: true,
-      },
-    ],
-  },
-  {
-    name: "balance",
-    description: "Retrieve your current balance",
-  },
-  {
-    name: "leaderboard",
-    description: "View the leaderboard of all users",
-  },
-  {
-    name: "help",
-    description: "Get instructions on how to use the bot",
-  },
-];
-
-export default guildCommands;
+};
