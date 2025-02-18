@@ -4,7 +4,9 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "dev": "nodemon",
+    "apply-commands": "node src/utils/registerCommands.js"
   },
   "keywords": [],
   "author": "Nikolai Ceballos",
