@@ -10,10 +10,13 @@ async function registerCommands() {
   try {
     const commands = await getCommands();
     await rest.put(
-      Routes.applicationGuildCommands(
-        process.env.CLIENT_ID,
-        process.env.GUILD_ID
-      ),
+      // GLOBAL COMMANDS
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      // USE THIS FOR TESTING OR GUILD-WIDE COMMANDS
+      // Routes.applicationGuildCommands(
+      //   process.env.CLIENT_ID,
+      //   process.env.GUILD_ID
+      // ),
       { body: commands }
     );
     console.log(`✅ Successfully registered commands!`);
