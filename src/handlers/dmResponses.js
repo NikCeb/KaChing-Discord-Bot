@@ -23,23 +23,28 @@ async function get_debt(message) {
     amount: "",
     lenderID: "",
     lenderName: "",
-    borrowerID: userID_borrower,
-    borrowerUsername: userName_borrower,
+    borrowerID: message.author.id,
+    borrowerName: message.author.username,
   };
 
-  const loanData = await manageRecords("read", userDetails);
+  // Use LIMIT to fetch only the records we need
+  const loanData = await manageRecords("read", userDetails, { limit: 4 });
 
   const debts = new EmbedBuilder()
     .setTitle("Reminder! Reminder! Reminder!")
-    .setDescription("This is a reminder for you to pay your dues.", "\u200B")
+    .setDescription("This is a reminder for you to pay your dues.")
     .setColor("#00FF00")
     .setFooter({
       text: "KaChing Discord Bot",
-      iconURL: interaction.client.user.displayAvatarURL(),
+      iconURL: message.client.user.displayAvatarURL(),
     });
-  if (Array.isArray(loanData)) {
-    loanData.slice(0, 4).forEach((loan) => {
-      this.embed.addFields(
+
+  if (Array.isArray(loanData) && loanData.length > 0) {
+    // Set the correct color for debts
+    debts.setColor("#FF0000");
+
+    loanData.forEach((loan) => {
+      debts.addFields(
         {
           name: `Loan on ${new Date(loan.date).toDateString() || ""}`,
           value: `Php ${loan.amount.toString()} owed to -> ${loan.lenderName}`,
@@ -48,11 +53,19 @@ async function get_debt(message) {
         { name: "\u200B", value: "\u200B", inline: true }
       );
     });
+
+    // Add total balance if available
+    if (loanData[0]?.balance) {
+      debts.setDescription(
+        `Your total outstanding balance: Php ${loanData[0].balance.toString()}`
+      );
+    }
   } else {
     debts.addFields({ name: "Loan Debt", value: "No Pending Balance" });
   }
+
   try {
-    await message.author.send({ embeds: [embed] });
+    await message.author.send({ embeds: [debts] });
   } catch (error) {
     console.error("Failed to send a reply:", error);
   }
@@ -63,8 +76,8 @@ async function help(message) {
     .setTitle("Help")
     .setDescription("Basic Commands to use KaChing Bot")
     .addFields(
-      { name: "Make Charges", value: "/balance", inline: true },
-      { name: "Pay Charges", value: "/pay-charge", inline: true }
+      { name: "Check Balance", value: "balance", inline: true },
+      { name: "Get Help", value: "help!", inline: true }
     )
     .setAuthor({ name: "KaChing Bot" });
   try {

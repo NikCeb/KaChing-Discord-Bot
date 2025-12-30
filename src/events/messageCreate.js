@@ -1,3 +1,4 @@
+import { ChannelType } from "discord.js";
 import dm_response from "../handlers/dmResponses.js";
 
 export default {

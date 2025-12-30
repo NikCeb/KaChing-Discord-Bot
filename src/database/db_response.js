@@ -1,30 +1,49 @@
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 
 const dbFilePath = path.resolve("./temp/database.db");
 sqlite3.verbose();
 
-// Check is database file exists, if not create it
-if (!fs.existsSync(dbFilePath)) {
-  const tempDir = path.dirname(dbFilePath);
-  if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir, { recursive: true });
+// Singleton database connection
+let dbInstance = null;
+
+// Get or create database connection
+async function getDatabase() {
+  if (dbInstance) {
+    return dbInstance;
   }
-  fs.writeFileSync(dbFilePath, "");
-  initializeDatabase().catch((error) => {
-    console.error("Error initializing database:", error);
-    throw error;
-  });
-}
-// Database initialization
-async function initializeDatabase() {
-  const db = await open({
+
+  // Check if database file exists, if not create it
+  try {
+    await fs.access(dbFilePath);
+  } catch {
+    const tempDir = path.dirname(dbFilePath);
+    try {
+      await fs.access(tempDir);
+    } catch {
+      await fs.mkdir(tempDir, { recursive: true });
+    }
+    await fs.writeFile(dbFilePath, "");
+  }
+
+  dbInstance = await open({
     filename: dbFilePath,
     driver: sqlite3.Database,
   });
 
+  // Enable WAL mode for better concurrency
+  await dbInstance.exec("PRAGMA journal_mode = WAL;");
+
+  // Initialize tables if needed
+  await initializeDatabase(dbInstance);
+
+  return dbInstance;
+}
+
+// Database initialization
+async function initializeDatabase(db) {
   await db.exec(`
     CREATE TABLE IF NOT EXISTS LoanData (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,8 +64,18 @@ async function initializeDatabase() {
     )
   `);
 
-  await db.close();
+  // Create index for faster queries
+  await db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_loan_borrower
+    ON LoanData(borrowerID, lenderID)
+  `);
+
+  await db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_user_borrower
+    ON UserData(borrowerID)
+  `);
 }
+
 // Create a new record in the database check if user exists in UserData table
 async function createRecord(db, userDetails) {
   const { amount, lenderID, lenderName, borrowerID, borrowerName } =
@@ -81,26 +110,26 @@ async function createRecord(db, userDetails) {
 }
 
 // Read records from the database based on the user details
-async function readRecords(db, userDetails) {
+async function readRecords(db, userDetails, limit = null) {
   let baseQuery = `
-    SELECT 
-      LD.id, 
+    SELECT
+      LD.id,
       LD.date,
-      LD.amount, 
-      LD.lenderID, 
-      LD.lenderName, 
-      LD.borrowerID, 
-      LD.borrowerName, 
+      LD.amount,
+      LD.lenderID,
+      LD.lenderName,
+      LD.borrowerID,
+      LD.borrowerName,
       UD.amount as balance
-    FROM 
+    FROM
       LoanData as LD
-    LEFT JOIN 
-      UserData as UD 
-    ON 
+    LEFT JOIN
+      UserData as UD
+    ON
       LD.borrowerID = UD.borrowerID
-    WHERE 
+    WHERE
       LD.borrowerID = ?
-    
+
   `;
   const params = [userDetails.borrowerID];
   if (userDetails.lenderID) {
@@ -108,7 +137,13 @@ async function readRecords(db, userDetails) {
     params.push(userDetails.lenderID);
   }
 
-  baseQuery += `ORDER BY LD.id DESC`;
+  baseQuery += ` ORDER BY LD.id DESC`;
+
+  // Add LIMIT clause if specified
+  if (limit !== null && limit > 0) {
+    baseQuery += ` LIMIT ?`;
+    params.push(limit);
+  }
 
   try {
     const records = await db.all(baseQuery, params);
@@ -122,7 +157,7 @@ async function readRecords(db, userDetails) {
 // Delete a record from the database and update the user balance
 async function deleteRecord(db, userDetails) {
   const { date, lenderID, borrowerID, amount, borrowerName } = userDetails;
-  // When Paying Lender Becomes Borrower because lender is the user who is ussuing the command
+  // When Paying Lender Becomes Borrower because lender is the user who is issuing the command
   try {
     const deleteQuery = date
       ? `DELETE FROM LoanData WHERE lenderID = ? AND borrowerID = ? AND amount = ? AND date = ?`
@@ -150,17 +185,14 @@ async function deleteRecord(db, userDetails) {
 }
 
 // Handle all database operations
-export async function manageRecords(purpose, userDetails) {
-  const db = await open({
-    filename: dbFilePath,
-    driver: sqlite3.Database,
-  });
+export async function manageRecords(purpose, userDetails, options = {}) {
+  const db = await getDatabase();
 
   try {
     let result;
     switch (purpose) {
       case "read":
-        result = await readRecords(db, userDetails);
+        result = await readRecords(db, userDetails, options.limit);
         return result.length ? result : "No records found";
       case "create":
         await createRecord(db, userDetails);
@@ -177,7 +209,15 @@ export async function manageRecords(purpose, userDetails) {
   } catch (error) {
     console.error(`Error managing records for purpose ${purpose}:`, error);
     throw error;
-  } finally {
-    await db.close();
+  }
+  // Note: We don't close the connection anymore - it's reused
+}
+
+// Graceful shutdown handler
+export async function closeDatabase() {
+  if (dbInstance) {
+    await dbInstance.close();
+    dbInstance = null;
+    console.log("Database connection closed");
   }
 }

@@ -85,21 +85,24 @@ class ResponseService {
         }
       );
     } else {
-      const loanData = await manageRecords("read", this.interactionData);
+      // Use LIMIT to fetch only the records we need
+      const loanData = await manageRecords("read", this.interactionData, {
+        limit: 4,
+      });
       console.log(loanData);
       this.embed
         .setTitle(`Reminder! Reminder! Reminder!`)
         .setDescription(
           `This is a reminder for you to pay your recent dues ${userMention(
             this.userID_borrower
-          )}. Your Balance is as follows: $  ${loanData[0].balance.toString()}`
+          )}. Your Balance is as follows: $  ${loanData[0]?.balance?.toString() || "0"}`
         )
         .setImage(
           "https://raw.githubusercontent.com/NikCeb/KaChing-Discord-Bot/refs/heads/main/images/burn_the_money_danny_devito.gif"
         );
 
       if (Array.isArray(loanData) && loanData.length > 0) {
-        loanData.slice(0, 4).forEach((loan) => {
+        loanData.forEach((loan) => {
           this.embed.addFields({
             name: `Loan on ${new Date(loan.date).toDateString()}`,
             value: `Php ${loan.amount.toString()} owed to -> ${
@@ -124,9 +127,14 @@ class ResponseService {
   }
   // Get user balance
   async getLoanData() {
-    const loadData = await manageRecords("read", this.interactionData);
+    // Use LIMIT to fetch only the records we need
+    const loadData = await manageRecords("read", this.interactionData, {
+      limit: 4,
+    });
     this.embed
-      .setTitle(`Your Outstanding Balance is as follows: ${loadData.balance}`)
+      .setTitle(
+        `Your Outstanding Balance is as follows: ${loadData[0]?.balance?.toString() || "0"}`
+      )
       .setDescription(
         `This is a reminder for you to pay your recent dues ${userMention(
           this.userID_borrower
@@ -135,8 +143,8 @@ class ResponseService {
       .setImage(
         "https://raw.githubusercontent.com/NikCeb/KaChing-Discord-Bot/refs/heads/main/images/burn_the_money_danny_devito.gif"
       );
-    if (Array.isArray(loanData) && loanData.length > 0) {
-      loanData.slice(0, 4).forEach((loan) => {
+    if (Array.isArray(loadData) && loadData.length > 0) {
+      loadData.forEach((loan) => {
         this.embed.addFields(
           {
             name: `Loan on ${new Date(loan.date).toDateString() || ""}`,
