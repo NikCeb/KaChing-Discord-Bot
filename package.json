@@ -12,7 +12,7 @@
   "author": "Nikolai Ceballos",
   "license": "ISC",
   "dependencies": {
-    "discord.js": "^14.16.3",
+    "discord.js": "^14.26.4",
     "dotenv": "^16.4.5",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7"
